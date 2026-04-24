@@ -20,6 +20,7 @@ PLATFORM_LABELS = {
     "greenhouse": "🌱 Greenhouse",
     "lever": "🔵 Lever",
     "workday": "💼 Workday",
+    "oracle_hcm": "🔶 Oracle HCM",
     "generic": "🌐 Generic",
 }
 
@@ -33,6 +34,8 @@ def detect_platform(url: str) -> str:
         return "lever"
     if "myworkdayjobs.com" in url:
         return "workday"
+    if "/en/sites/" in url or "oraclecloud.com" in url:
+        return "oracle_hcm"
     return "generic"
 
 

@@ -3,12 +3,14 @@
 from .greenhouse import scrape as _greenhouse
 from .lever import scrape as _lever
 from .workday import scrape as _workday
+from .oracle_hcm import scrape as _oracle_hcm
 from .generic import scrape as _generic
 
 _SCRAPERS = {
     "greenhouse": _greenhouse,
     "lever": _lever,
     "workday": _workday,
+    "oracle_hcm": _oracle_hcm,
     "generic": _generic,
 }
 
