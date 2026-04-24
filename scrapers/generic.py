@@ -129,7 +129,11 @@ def _is_js_shell(html: str) -> bool:
     body = soup.body
     if not body:
         return True
-    return len(body.get_text(strip=True)) < 200
+    if len(body.get_text(strip=True)) < 200:
+        return True
+    # Page has text (e.g. nav/header) but no job-pattern links — still a JS shell
+    job_links = soup.find_all("a", href=lambda h: h and any(kw in h.lower() for kw in JOB_PATH_KEYWORDS))
+    return len(job_links) == 0
 
 
 def scrape(company_cfg: dict, categories: list[str], seen_urls: set[str]) -> list[dict]:

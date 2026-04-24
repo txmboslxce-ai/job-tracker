@@ -12,7 +12,7 @@ from scrapers import scrape_company
 st.set_page_config(page_title="Job Tracker", page_icon="🔍", layout="wide")
 
 DEFAULT_KEYWORDS = (
-    "Engineering\nSoftware\nDeveloper\nData\nProduct\nIT\n"
+    "Engineer\nSoftware\nDeveloper\nData\nProduct\nIT\n"
     "Technology\nSystems\nInfrastructure\nDevOps\nCloud"
 )
 
