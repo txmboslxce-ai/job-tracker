@@ -1,0 +1,74 @@
+# Job Posting Tracker Configuration
+# Fill in real company IDs/URLs for the companies you want to monitor.
+# Never commit credentials.json to version control.
+
+google_sheets:
+  credentials_path: credentials.json
+  sheet_id: 1kF8JPR1EvTT6yYPVW8OBOgsBDLTSR8YdORaP7Y4G4HY
+
+email:
+  sender: your.email@gmail.com
+  recipient: your.email@gmail.com
+  smtp_host: smtp.gmail.com
+  smtp_port: 587
+  # Generate a Gmail App Password at: https://myaccount.google.com/apppasswords
+  # Then set the env var before running:  set GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+  smtp_password_env: GMAIL_APP_PASSWORD
+
+# Job title keywords used to filter postings across all platforms.
+# A posting is included if any keyword appears in the title (case-insensitive).
+categories:
+  - Engineering
+  - Software
+  - Developer
+  - Data
+  - Product
+  - IT
+  - Technology
+  - Systems
+  - Infrastructure
+  - DevOps
+  - Cloud
+
+companies:
+  # ── Greenhouse ────────────────────────────────────────────────────────────
+  # Find greenhouse_id in the board URL: boards.greenhouse.io/{greenhouse_id}
+  # or job-boards.greenhouse.io/{greenhouse_id}
+  - name: Acme Corp
+    platform: greenhouse
+    url: https://boards.greenhouse.io/acmecorp
+    greenhouse_id: acmecorp
+
+  - name: Globex Industries
+    platform: greenhouse
+    url: https://job-boards.greenhouse.io/globex
+    greenhouse_id: globex
+
+  # ── Lever ─────────────────────────────────────────────────────────────────
+  # Find lever_id in the board URL: jobs.lever.co/{lever_id}
+  - name: Initech
+    platform: lever
+    url: https://jobs.lever.co/initech
+    lever_id: initech
+
+  # ── Workday ───────────────────────────────────────────────────────────────
+  # Paste the full public-facing Workday board URL.
+  # The scraper automatically derives the internal API endpoint.
+  - name: Umbrella Corp
+    platform: workday
+    url: https://umbrella.wd1.myworkdayjobs.com/en-US/UmbrellaCareers
+
+  # ── Generic (BeautifulSoup) ───────────────────────────────────────────────
+  # For custom career pages. Add 'selectors' for reliable extraction;
+  # omit them to fall back to heuristic link scanning.
+  - name: allnex
+    platform: generic
+    url: https://careers.allnex.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_department=&optionsFacetsDD_city=&optionsFacetsDD_country=&optionsFacetsDD_lang=
+    selectors:
+      job_links: "a[href^='/job/']"  # every link whose href starts with /job/
+      # no title selector needed — the link text is the job title
+
+  # Generic example without selectors (heuristic mode):
+  # - name: Soylent Corp
+  #   platform: generic
+  #   url: https://soylentcorp.com/careers

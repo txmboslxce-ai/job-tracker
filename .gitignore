@@ -1,0 +1,20 @@
+# Credentials — never commit
+credentials.json
+.env
+.streamlit/secrets.toml
+
+# Runtime files
+seen_urls.txt
+logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Temp test files
+_test_*.py
