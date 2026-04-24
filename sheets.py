@@ -76,3 +76,71 @@ def get_existing_urls(sheet: gspread.Worksheet) -> set[str]:
     except gspread.exceptions.APIError as e:
         print(f"[sheets] Warning: could not read existing URLs — {e}")
         return set()
+
+
+# ── Companies config tab ───────────────────────────────────────────────────
+
+_COMPANIES_TAB = "Companies"
+_COMPANIES_HEADERS = ["Name", "Platform", "URL", "greenhouse_id", "lever_id", "Active"]
+
+
+def get_companies_tab(jobs_ws: gspread.Worksheet) -> gspread.Worksheet:
+    """Return (or create) the Companies config tab on the same spreadsheet."""
+    spreadsheet = jobs_ws.spreadsheet
+    try:
+        return spreadsheet.worksheet(_COMPANIES_TAB)
+    except gspread.WorksheetNotFound:
+        ws = spreadsheet.add_worksheet(_COMPANIES_TAB, rows=200, cols=len(_COMPANIES_HEADERS))
+        ws.insert_row(_COMPANIES_HEADERS, index=1)
+        return ws
+
+
+def load_all_companies_raw(companies_ws: gspread.Worksheet) -> list[tuple[int, dict]]:
+    """Return all companies (active and paused) as (sheet_row_index, dict) pairs."""
+    values = companies_ws.get_all_values()
+    if len(values) <= 1:
+        return []
+    headers = [h.lower().replace(" ", "_") for h in values[0]]
+    return [
+        (i + 2, dict(zip(headers, row)))  # row 1 = header, data starts at row 2
+        for i, row in enumerate(values[1:])
+    ]
+
+
+def load_companies(companies_ws: gspread.Worksheet) -> list[dict]:
+    """Return active companies as config-compatible dicts (for scrapers)."""
+    result = []
+    for _, co in load_all_companies_raw(companies_ws):
+        if str(co.get("active", "TRUE")).upper() == "FALSE":
+            continue
+        cfg: dict = {
+            "name": co.get("name", ""),
+            "platform": co.get("platform", "generic"),
+            "url": co.get("url", ""),
+        }
+        if co.get("greenhouse_id"):
+            cfg["greenhouse_id"] = co["greenhouse_id"]
+        if co.get("lever_id"):
+            cfg["lever_id"] = co["lever_id"]
+        result.append(cfg)
+    return result
+
+
+def save_company(companies_ws: gspread.Worksheet, cfg: dict) -> None:
+    """Append a new company row."""
+    companies_ws.append_row(
+        [cfg.get("name", ""), cfg.get("platform", "generic"), cfg.get("url", ""),
+         cfg.get("greenhouse_id", ""), cfg.get("lever_id", ""), "TRUE"],
+        value_input_option="USER_ENTERED",
+    )
+
+
+def toggle_company_active(companies_ws: gspread.Worksheet, row_idx: int, active: bool) -> None:
+    """Flip the Active column for the given 1-based sheet row."""
+    active_col = _COMPANIES_HEADERS.index("Active") + 1
+    companies_ws.update_cell(row_idx, active_col, "TRUE" if active else "FALSE")
+
+
+def delete_company_row(companies_ws: gspread.Worksheet, row_idx: int) -> None:
+    """Delete a company row by its 1-based sheet row index."""
+    companies_ws.delete_rows(row_idx)

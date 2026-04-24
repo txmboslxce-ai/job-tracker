@@ -1,0 +1,36 @@
+name: Scheduled Scan
+
+on:
+  schedule:
+    # 8:00 AM UTC, Monday–Friday
+    # Adjust the cron string to change the schedule:
+    #   '0 8 * * 1-5'   = weekdays at 8am UTC
+    #   '0 8 * * *'     = every day at 8am UTC
+    #   '0 8,14 * * 1-5' = weekdays at 8am and 2pm UTC
+    - cron: '0 8 * * 1-5'
+
+  # Allows you to trigger a manual run from:
+  # GitHub repo → Actions → Scheduled Scan → Run workflow
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install gspread google-auth pyyaml requests beautifulsoup4
+
+      - name: Write credentials
+        run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
+
+      - name: Run scan
+        run: python main.py
+        env:
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}

@@ -77,6 +77,19 @@ def main() -> int:
             print(f"[main] ERROR connecting to Sheets: {e}")
             return 1
 
+    # Prefer companies saved via the web UI (Companies tab) over config.yaml
+    if sheet is not None:
+        try:
+            companies_ws = sheets.get_companies_tab(sheet)
+            sheet_companies = sheets.load_companies(companies_ws)
+            if sheet_companies:
+                companies = sheet_companies
+                print(f"[main] Loaded {len(companies)} company/companies from Sheet Companies tab.")
+            else:
+                print(f"[main] Companies tab empty — using {len(companies)} from config.yaml.")
+        except Exception as e:
+            print(f"[main] Could not read Companies tab ({e}) — using config.yaml.")
+
     # Build deduplication set: file cache ∪ sheet URLs
     seen_urls = load_seen_urls()
     if sheet is not None:
