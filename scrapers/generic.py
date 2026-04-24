@@ -123,9 +123,19 @@ def _scrape_heuristic(soup: BeautifulSoup, base_url: str, categories: list[str],
     return new_postings
 
 
+def _is_js_shell(html: str) -> bool:
+    """Return True if the page is a JavaScript app shell with no real content."""
+    soup = BeautifulSoup(html, "html.parser")
+    body = soup.body
+    if not body:
+        return True
+    return len(body.get_text(strip=True)) < 200
+
+
 def scrape(company_cfg: dict, categories: list[str], seen_urls: set[str]) -> list[dict]:
     """
     Scrape a generic career page with BeautifulSoup and return new postings.
+    Automatically falls back to a headless browser for JavaScript-rendered sites.
 
     Args:
         company_cfg:  Dict from config.yaml (must have 'url'; optional 'selectors').
@@ -139,16 +149,29 @@ def scrape(company_cfg: dict, categories: list[str], seen_urls: set[str]) -> lis
     url = company_cfg.get("url", "")
     selectors = company_cfg.get("selectors")
 
-    print(f"[generic] Fetching {company_name} ({url})...")
+    print(f"[generic] Fetching {company_name}...")
 
+    html = None
     try:
         resp = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
+        html = resp.text
     except requests.RequestException as e:
         print(f"[generic] ERROR fetching {company_name}: {e}")
         return []
 
-    soup = BeautifulSoup(resp.text, "html.parser")
+    # If the page is a JavaScript shell, render it with a real browser
+    if _is_js_shell(html):
+        print(f"[generic] {company_name}: JavaScript-rendered site detected — using browser...")
+        from .browser import fetch_rendered_html
+        rendered = fetch_rendered_html(url)
+        if rendered:
+            html = rendered
+        else:
+            print(f"[generic] {company_name}: browser render failed — no results")
+            return []
+
+    soup = BeautifulSoup(html, "html.parser")
     today = str(date.today())
 
     if selectors:
