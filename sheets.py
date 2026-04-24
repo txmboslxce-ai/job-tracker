@@ -81,14 +81,20 @@ def get_existing_urls(sheet: gspread.Worksheet) -> set[str]:
 # ── Companies config tab ───────────────────────────────────────────────────
 
 _COMPANIES_TAB = "Companies"
-_COMPANIES_HEADERS = ["Name", "Platform", "URL", "greenhouse_id", "lever_id", "Active"]
+_COMPANIES_HEADERS = ["Name", "Platform", "URL", "greenhouse_id", "lever_id", "Active", "Keywords"]
 
 
 def get_companies_tab(jobs_ws: gspread.Worksheet) -> gspread.Worksheet:
-    """Return (or create) the Companies config tab on the same spreadsheet."""
+    """Return (or create) the Companies config tab on the same spreadsheet.
+    Migrates existing tabs that pre-date the Keywords column."""
     spreadsheet = jobs_ws.spreadsheet
     try:
-        return spreadsheet.worksheet(_COMPANIES_TAB)
+        ws = spreadsheet.worksheet(_COMPANIES_TAB)
+        # Migration: add Keywords header if the column doesn't exist yet
+        existing_headers = ws.row_values(1)
+        if "Keywords" not in existing_headers:
+            ws.update_cell(1, len(existing_headers) + 1, "Keywords")
+        return ws
     except gspread.WorksheetNotFound:
         ws = spreadsheet.add_worksheet(_COMPANIES_TAB, rows=200, cols=len(_COMPANIES_HEADERS))
         ws.insert_row(_COMPANIES_HEADERS, index=1)
@@ -117,6 +123,7 @@ def load_companies(companies_ws: gspread.Worksheet) -> list[dict]:
             "name": co.get("name", ""),
             "platform": co.get("platform", "generic"),
             "url": co.get("url", ""),
+            "keywords": co.get("keywords", ""),
         }
         if co.get("greenhouse_id"):
             cfg["greenhouse_id"] = co["greenhouse_id"]
@@ -130,7 +137,8 @@ def save_company(companies_ws: gspread.Worksheet, cfg: dict) -> None:
     """Append a new company row."""
     companies_ws.append_row(
         [cfg.get("name", ""), cfg.get("platform", "generic"), cfg.get("url", ""),
-         cfg.get("greenhouse_id", ""), cfg.get("lever_id", ""), "TRUE"],
+         cfg.get("greenhouse_id", ""), cfg.get("lever_id", ""), "TRUE",
+         cfg.get("keywords", "")],
         value_input_option="USER_ENTERED",
     )
 

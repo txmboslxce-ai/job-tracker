@@ -181,6 +181,8 @@ with tab_companies:
                         st.markdown(f"**{co.get('name', '')}**")
                         url = co.get("url", "")
                         st.caption(url[:72] + "…" if len(url) > 72 else url)
+                        if co.get("keywords"):
+                            st.caption(f"🔑 {co['keywords']}")
                     with c2:
                         st.write(PLATFORM_LABELS.get(co.get("platform", "generic"), "🌐"))
                     with c3:
@@ -198,6 +200,10 @@ with tab_companies:
             with st.form("add_company_form"):
                 add_url = st.text_input("Careers page URL")
                 add_name = st.text_input("Company name")
+                add_keywords = st.text_input(
+                    "Keywords (optional)",
+                    placeholder="Engineer, Software, Data  — leave blank to use global defaults",
+                )
                 add_submitted = st.form_submit_button("Add Company", type="primary")
                 if add_submitted:
                     add_url = add_url.strip()
@@ -206,6 +212,7 @@ with tab_companies:
                     else:
                         platform = detect_platform(add_url)
                         cfg = build_company_cfg(add_url, add_name.strip() or add_url, platform)
+                        cfg["keywords"] = add_keywords.strip()
                         sh.save_company(companies_ws, cfg)
                         st.success(f"Added **{cfg['name']}** ({PLATFORM_LABELS[platform]})")
                         st.rerun()

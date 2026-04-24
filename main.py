@@ -105,7 +105,10 @@ def main() -> int:
     all_new: list[dict] = []
     for company in companies:
         try:
-            new = scrape_company(company, categories, seen_urls)
+            # Per-company keywords override global categories if set
+            kw_raw = company.get("keywords", "")
+            kws = [k.strip() for k in kw_raw.split(",") if k.strip()] if kw_raw else categories
+            new = scrape_company(company, kws, seen_urls)
             all_new.extend(new)
         except Exception as e:
             print(f"[main] ERROR scraping {company.get('name', '?')}: {e}")
