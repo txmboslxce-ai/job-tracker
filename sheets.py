@@ -61,10 +61,12 @@ def append_posting(sheet: gspread.Worksheet, posting: dict) -> None:
 
 
 def append_postings(sheet: gspread.Worksheet, postings: list[dict]) -> int:
-    """Append a list of postings. Returns number of rows written."""
-    for posting in postings:
+    """Append postings whose URLs are not already in the sheet. Returns count written."""
+    existing = get_existing_urls(sheet)
+    new_only = [p for p in postings if p.get("url", "") not in existing]
+    for posting in new_only:
         append_posting(sheet, posting)
-    return len(postings)
+    return len(new_only)
 
 
 def get_existing_urls(sheet: gspread.Worksheet) -> set[str]:
