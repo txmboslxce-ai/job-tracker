@@ -90,9 +90,10 @@ def get_companies_tab(jobs_ws: gspread.Worksheet) -> gspread.Worksheet:
     spreadsheet = jobs_ws.spreadsheet
     try:
         ws = spreadsheet.worksheet(_COMPANIES_TAB)
-        # Migration: add Keywords header if the column doesn't exist yet
+        # Migration: add Keywords column if it didn't exist when the tab was created
         existing_headers = ws.row_values(1)
         if "Keywords" not in existing_headers:
+            ws.add_cols(1)
             ws.update_cell(1, len(existing_headers) + 1, "Keywords")
         return ws
     except gspread.WorksheetNotFound:
